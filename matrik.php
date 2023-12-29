@@ -82,7 +82,7 @@ require "include/conn.php";
             <td>" . round($row->C4, 2) . "</td>
             <td>" . round($row->C5, 2) . "</td>
             <td>
-            <a href='keputusan-hapus.php?id={$row->id_alternative}' class='btn btn-danger btn-sm'>Hapus</a>
+            <button class='btn btn-danger btn-sm' onclick=\"if(confirm('Apakah Anda yakin ingin menghapus?')){window.location.href='keputusan-hapus.php?id={$row->id_alternative}';}\">Hapus</button>
             </td>
           </tr>\n";
                     }
@@ -108,70 +108,70 @@ require "include/conn.php";
                     </tr>
                     <?php
                     $sql = "SELECT
-          a.id_alternative,
-          SUM(
-            IF(
-              a.id_criteria=1,
-              IF(
-                b.attribute='benefit',
-                a.value/" . max($X[1]) . ",
-                " . min($X[1]) . "/a.value)
-              ,0)
-              ) AS C1,
-          SUM(
-            IF(
-              a.id_criteria=2,
-              IF(
-                b.attribute='benefit',
-                a.value/" . max($X[2]) . ",
-                " . min($X[2]) . "/a.value)
-               ,0)
-             ) AS C2,
-          SUM(
-            IF(
-              a.id_criteria=3,
-              IF(
-                b.attribute='benefit',
-                a.value/" . max($X[3]) . ",
-                " . min($X[3]) . "/a.value)
-               ,0)
-             ) AS C3,
-          SUM(
-            IF(
-              a.id_criteria=4,
-              IF(
-                b.attribute='benefit',
-                a.value/" . max($X[4]) . ",
-                " . min($X[4]) . "/a.value)
-               ,0)
-             ) AS C4,
-          SUM(
-            IF(
-              a.id_criteria=5,
-              IF(
-                b.attribute='benefit',
-                a.value/" . max($X[5]) . ",
-                " . min($X[5]) . "/a.value)
-               ,0)
-             ) AS C5
-        FROM
-          saw_evaluations a
-          JOIN saw_criterias b USING(id_criteria)
-        GROUP BY a.id_alternative
-        ORDER BY a.id_alternative
-       ";
+                    a.id_alternative,
+                    SUM(
+                      IF(
+                        a.id_criteria=1,
+                        IF(
+                          b.attribute='benefit',
+                          a.value/" . (count($X[1]) > 0 ? max($X[1]) : 1) . ",
+                          " . (count($X[1]) > 0 ? min($X[1]) : 1) . "/a.value)
+                        ,0)
+                        ) AS C1,
+                    SUM(
+                      IF(
+                        a.id_criteria=2,
+                        IF(
+                          b.attribute='benefit',
+                          a.value/" . (count($X[2]) > 0 ? max($X[2]) : 1) . ",
+                          " . (count($X[2]) > 0 ? min($X[2]) : 1) . "/a.value)
+                         ,0)
+                       ) AS C2,
+                    SUM(
+                      IF(
+                        a.id_criteria=3,
+                        IF(
+                          b.attribute='benefit',
+                          a.value/" . (count($X[3]) > 0 ? max($X[3]) : 1) . ",
+                          " . (count($X[3]) > 0 ? min($X[3]) : 1) . "/a.value)
+                         ,0)
+                       ) AS C3,
+                    SUM(
+                      IF(
+                        a.id_criteria=4,
+                        IF(
+                          b.attribute='benefit',
+                          a.value/" . (count($X[4]) > 0 ? max($X[4]) : 1) . ",
+                          " . (count($X[4]) > 0 ? min($X[4]) : 1) . "/a.value)
+                         ,0)
+                       ) AS C4,
+                    SUM(
+                      IF(
+                        a.id_criteria=5,
+                        IF(
+                          b.attribute='benefit',
+                          a.value/" . (count($X[5]) > 0 ? max($X[5]) : 1) . ",
+                          " . (count($X[5]) > 0 ? min($X[5]) : 1) . "/a.value)
+                         ,0)
+                       ) AS C5
+                  FROM
+                    saw_evaluations a
+                    JOIN saw_criterias b USING(id_criteria)
+                  GROUP BY a.id_alternative
+                  ORDER BY a.id_alternative";
+
                     $result = $db->query($sql);
                     $R = array();
                     while ($row = $result->fetch_object()) {
                       $R[$row->id_alternative] = array($row->C1, $row->C2, $row->C3, $row->C4, $row->C5);
                       echo "<tr class='center'>
-            <th>A{$row->id_alternative}</th>
-            <td>" . round($row->C1, 2) . "</td>
-            <td>" . round($row->C2, 2) . "</td>
-            <td>" . round($row->C3, 2) . "</td>
-            <td>" . round($row->C4, 2) . "</td>
-            <td>" . round($row->C5, 2) . "</td>
-          </tr>\n";
+                      <th>A{$row->id_alternative}</th>
+                      <td>" . round($row->C1, 2) . "</td>
+                      <td>" . round($row->C2, 2) . "</td>
+                      <td>" . round($row->C3, 2) . "</td>
+                      <td>" . round($row->C4, 2) . "</td>
+                      <td>" . round($row->C5, 2) . "</td>
+                  </tr>\n";
                     }
                     ?>
                   </table>
@@ -200,12 +200,24 @@ require "include/conn.php";
             <div class="form-group">
               <select class="form-control form-select" name="id_alternative">
                 <?php
-                $sql = 'SELECT id_alternative,name FROM saw_alternatives';
+                $sql = 'SELECT id_alternative, name FROM saw_alternatives';
+                $sql2 = 'SELECT id_alternative FROM saw_evaluations GROUP BY id_alternative';
+
                 $result = $db->query($sql);
-                while ($row = $result->fetch_object()) {
-                  echo '<option disabled value="' . $row->id_alternative . '">' . $row->name . '</option>';
+                $result2 = $db->query($sql2);
+
+                $criterias = array();
+                while ($row2 = $result2->fetch_object()) {
+                  $criterias[$row2->id_alternative] = true;
                 }
+
+                while ($row = $result->fetch_object()) {
+                  $disabledAttribute = isset($criterias[$row->id_alternative]) ? 'disabled' : '';
+                  echo '<option ' . $disabledAttribute . ' value="' . $row->id_alternative . '">' . $row->name . '</option>';
+                }
+
                 $result->free();
+                $result2->free();
                 ?>
               </select>
             </div>
@@ -215,10 +227,10 @@ require "include/conn.php";
           $result = $db->query($sql);
 
           while ($row = $result->fetch_object()) {
-              echo '<div class="modal-body">
-              <label>'. $row->criteria .'</label>
+            echo '<div class="modal-body">
+              <label>' . $row->criteria . '</label>
               <div class="form-group">
-                <input type="text" name="criteria_'. $row->id_criteria .'" placeholder="Criteria '. $row->id_criteria .' ..." class="form-control" required>
+                <input type="number" min="0" name="criteria_' . $row->id_criteria . '" placeholder="Criteria ' . $row->id_criteria . ' ..." class="form-control" required>
               </div>
             </div>';
           }

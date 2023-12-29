@@ -64,7 +64,7 @@ while ($row = $result->fetch_object()) {
             </button>
             <div class='dropdown-menu' aria-labelledby='dropdownMenuButton'>
                 <a class='dropdown-item' href='alternatif-edit.php?id={$row->id_alternative}'>Edit</a>
-                <a class='dropdown-item' href='alternatif-hapus.php?id={$row->id_alternative}'>Hapus</a>
+                <button class='dropdown-item' onclick=\"if(confirm('Apakah Anda yakin ingin menghapus?')){window.location.href='alternatif-hapus.php?id={$row->id_alternative}';}\">Hapus</button>
             </div>
         </div>
     </div>
